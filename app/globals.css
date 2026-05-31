@@ -1,26 +1,109 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0A0F1E;
+  --surface: #111827;
+  --border: #1F2937;
+  --text: #F0EDE3;
+  --text-muted: #6B7280;
+  --green: #4ADE80;
+  --red: #F87171;
+  --blue: #60A5FA;
+  --amber: #D97706;
+  --radius: 8px;
+  
+  --background: var(--bg);
+  --foreground: var(--text);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-border-card: var(--border);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-correct: var(--green);
+  --color-wrong: var(--red);
+  --color-active: var(--blue);
+  --color-accent: var(--amber);
+  
+  --font-mono: var(--font-mono-custom), ui-monospace, monospace;
+  --font-serif: var(--font-serif-custom), Georgia, serif;
+  --font-sans: var(--font-sans-custom), sans-serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --animate-blink: blink 530ms infinite;
+  --animate-wrong-shake: wrongShake 300ms ease-in-out;
+  --animate-correct-pop: correctPop 350ms ease-out;
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  @keyframes wrongShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+  @keyframes correctPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+    100% { transform: scale(1); }
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans-custom), sans-serif;
+  overflow-x: hidden;
+}
+
+/* Glassmorphism primitives */
+.glass-panel {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(31, 41, 55, 0.8);
+}
+
+.glass-panel-active {
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  box-shadow: 0 0 15px rgba(96, 165, 250, 0.15);
+}
+
+/* Monospace Game interface fonts */
+.mono-game {
+  font-family: var(--font-mono-custom), ui-monospace, monospace;
+}
+
+/* Academic literary headers */
+.serif-header {
+  font-family: var(--font-serif-custom), Georgia, serif;
+}
+
+/* Customized scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Pulse border for active state */
+@keyframes borderPulse {
+  0%, 100% { border-color: rgba(96, 165, 250, 0.4); }
+  50% { border-color: rgba(96, 165, 250, 0.8); }
+}
+
+.pulse-border-active {
+  animation: borderPulse 2s infinite ease-in-out;
 }

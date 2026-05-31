@@ -1,0 +1,166 @@
+{
+  "users": [
+    {
+      "id": "c00180ad-d970-4465-b674-d9a76307a9e8",
+      "clerk_id": "user_mock_dev_terminal",
+      "email": "user_mock_dev_terminal@example.com",
+      "plan": "pro",
+      "created_at": "2026-05-31T08:11:06.185Z"
+    }
+  ],
+  "decks": [
+    {
+      "id": "55d027fd-bf1b-4e23-a20b-09519ee930af",
+      "user_id": "c00180ad-d970-4465-b674-d9a76307a9e8",
+      "title": "Medicine Study Session — 31/05/2026",
+      "subject": "medicine",
+      "source_text": "The renin-angiotensin-aldosterone system (RAAS) is an important hormone-based pathway that regulates fluid balance and systemic blood pressure. The system is activated by decreases in blood volume or pressure detected by baroreceptors located in the carotid sinus, or by a drop in flow rate through the kidneys detected by the juxtaglomerular apparatus. Following the detected drop in blood pressure, the enzyme renin is released from specialised cells within the kidney. The substrate of renin is the inactive precursor angiotensinogen, which is converted into angiotensin I. Angiotensin I is then enzymatically converted by angiotensin converting enzyme (ACE) into angiotensin II, a hormone that ultimately increases blood pressure. Angiotensin II augments release of the steroid hormone aldosterone from the adrenal glands, which acts to increase sodium retention and potassium secretion from the kidney, causing water retention and restoring fluid balance. Angiotensin II is also a potent endogenous vasoconstrictor, causing resistance arteries and veins to constrict and raising blood pressure. Chronic activation of the RAAS system can lead to deleterious remodelling, hypertension, and chronic kidney disease.\nThe adrenergic nervous system governs cardiovascular output through circulating catecholamines such as adrenaline and noradrenaline, which bind to G-protein coupled adrenergic receptors. In blood vessels, the predominant subtype is the alpha-1 adrenergic receptor, whose activation triggers the phospholipase-C and inositol triphosphate intracellular signalling pathway, resulting in vasoconstriction and increased systemic blood pressure. In the heart, beta-1 receptors mediate positive chronotropic and positive inotropic effects, increasing cardiac output and conduction through the atrioventricular (AV) node. Beta-3 receptor activation, however, antagonises these actions and produces a negative inotropic effect, providing an inbuilt regulatory mechanism. The parasympathetic system acts via acetylcholine binding to M2 muscarinic receptors in the heart, released from the vagus nerve, producing negative chronotropic effects and decreasing AV node conduction — the opposite of adrenergic stimulation.",
+      "card_count": 10,
+      "created_at": "2026-05-31T12:09:06.153Z",
+      "updated_at": "2026-05-31T12:09:06.153Z"
+    }
+  ],
+  "cards": [
+    {
+      "id": "7ba272ea-a90f-4640-a14b-8358c45976bb",
+      "deck_id": "55d027fd-bf1b-4e23-a20b-09519ee930af",
+      "position": 0,
+      "sentence": "The {{renin-angiotensin-aldosterone system}} is an important hormone-based pathway that regulates fluid balance and systemic blood pressure.",
+      "blanks": [
+        {
+          "term": "renin-angiotensin-aldosterone system",
+          "hint": "hormone pathway",
+          "position": 4
+        }
+      ],
+      "created_at": "2026-05-31T12:09:06.153Z"
+    },
+    {
+      "id": "44e8f530-0621-467c-b586-e4ad9649a570",
+      "deck_id": "55d027fd-bf1b-4e23-a20b-09519ee930af",
+      "position": 1,
+      "sentence": "The system is activated by decreases in blood volume or pressure detected by {{baroreceptors}} located in the carotid sinus.",
+      "blanks": [
+        {
+          "term": "baroreceptors",
+          "hint": "pressure sensors",
+          "position": 77
+        }
+      ],
+      "created_at": "2026-05-31T12:09:06.153Z"
+    },
+    {
+      "id": "3b310ba1-a362-4d3e-acc4-62b8f11707db",
+      "deck_id": "55d027fd-bf1b-4e23-a20b-09519ee930af",
+      "position": 2,
+      "sentence": "Following the detected drop in blood pressure, the enzyme {{renin}} is released from specialised cells within the kidney.",
+      "blanks": [
+        {
+          "term": "renin",
+          "hint": "kidney enzyme",
+          "position": 58
+        }
+      ],
+      "created_at": "2026-05-31T12:09:06.153Z"
+    },
+    {
+      "id": "2245dfee-0c8f-4357-99f3-f01b1570d044",
+      "deck_id": "55d027fd-bf1b-4e23-a20b-09519ee930af",
+      "position": 3,
+      "sentence": "The substrate of renin is the inactive precursor {{angiotensinogen}}, which is converted into angiotensin I.",
+      "blanks": [
+        {
+          "term": "angiotensinogen",
+          "hint": "protein precursor",
+          "position": 49
+        }
+      ],
+      "created_at": "2026-05-31T12:09:06.153Z"
+    },
+    {
+      "id": "823e8f9d-97e5-4bb2-9e9b-03de1a611389",
+      "deck_id": "55d027fd-bf1b-4e23-a20b-09519ee930af",
+      "position": 4,
+      "sentence": "Angiotensin I is then enzymatically converted by {{angiotensin converting enzyme}} into angiotensin II.",
+      "blanks": [
+        {
+          "term": "angiotensin converting enzyme",
+          "hint": "enzyme acronym",
+          "position": 49
+        }
+      ],
+      "created_at": "2026-05-31T12:09:06.153Z"
+    },
+    {
+      "id": "2a225fbb-e151-430f-a4fc-6833bbee210f",
+      "deck_id": "55d027fd-bf1b-4e23-a20b-09519ee930af",
+      "position": 5,
+      "sentence": "Angiotensin II augments release of the steroid hormone {{aldosterone}} from the adrenal glands.",
+      "blanks": [
+        {
+          "term": "aldosterone",
+          "hint": "steroid hormone",
+          "position": 55
+        }
+      ],
+      "created_at": "2026-05-31T12:09:06.153Z"
+    },
+    {
+      "id": "7c95eb46-9112-4e8a-852f-000932b23875",
+      "deck_id": "55d027fd-bf1b-4e23-a20b-09519ee930af",
+      "position": 6,
+      "sentence": "The {{adrenergic nervous system}} governs cardiovascular output through circulating catecholamines such as adrenaline and noradrenaline.",
+      "blanks": [
+        {
+          "term": "adrenergic nervous system",
+          "hint": "nervous system branch",
+          "position": 4
+        }
+      ],
+      "created_at": "2026-05-31T12:09:06.153Z"
+    },
+    {
+      "id": "d358e4da-5a1d-4d79-a620-75c47e3f0966",
+      "deck_id": "55d027fd-bf1b-4e23-a20b-09519ee930af",
+      "position": 7,
+      "sentence": "In blood vessels, the predominant subtype is the {{alpha-1 adrenergic receptor}}, whose activation triggers the phospholipase-C and inositol triphosphate intracellular signalling pathway.",
+      "blanks": [
+        {
+          "term": "alpha-1 adrenergic receptor",
+          "hint": "receptor subtype",
+          "position": 49
+        }
+      ],
+      "created_at": "2026-05-31T12:09:06.154Z"
+    },
+    {
+      "id": "901ad00d-4c29-4cca-ad3f-93a1deae0e52",
+      "deck_id": "55d027fd-bf1b-4e23-a20b-09519ee930af",
+      "position": 8,
+      "sentence": "In the heart, {{beta-1 receptors}} mediate positive chronotropic and positive inotropic effects, increasing cardiac output and conduction through the atrioventricular node.",
+      "blanks": [
+        {
+          "term": "beta-1 receptors",
+          "hint": "heart receptors",
+          "position": 14
+        }
+      ],
+      "created_at": "2026-05-31T12:09:06.154Z"
+    },
+    {
+      "id": "252a941a-8e45-4b2c-8e6f-2c1040de6e4b",
+      "deck_id": "55d027fd-bf1b-4e23-a20b-09519ee930af",
+      "position": 9,
+      "sentence": "The {{parasympathetic system}} acts via acetylcholine binding to M2 muscarinic receptors in the heart, released from the vagus nerve.",
+      "blanks": [
+        {
+          "term": "parasympathetic system",
+          "hint": "nervous system branch",
+          "position": 4
+        }
+      ],
+      "created_at": "2026-05-31T12:09:06.154Z"
+    }
+  ],
+  "daily_usage": []
+}
