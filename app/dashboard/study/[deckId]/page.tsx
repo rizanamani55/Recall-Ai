@@ -13,6 +13,7 @@ import { FeedbackOverlay } from "@/components/study/FeedbackOverlay";
 import { HintSystem } from "@/components/study/HintSystem";
 import { SessionSummary } from "@/components/study/SessionSummary";
 import { useUser } from "@/lib/auth-client";
+import { getDeck } from "@/lib/indexeddb";
 
 interface StudyPageProps {
   params: Promise<{
@@ -38,15 +39,21 @@ export default function StudyDeckPage({ params }: StudyPageProps) {
   // Fetch saved deck cards
   useEffect(() => {
     async function loadDeckData() {
-      if (!user) return;
       try {
-        const res = await fetch(`/api/decks/${deckId}`);
-        if (!res.ok) {
-          throw new Error("Failed to load study deck library");
+        if (!user) {
+          const localData: any = await getDeck("guest", deckId as string);
+          if (!localData) throw new Error("Deck not found locally.");
+          setDeck(localData.deck);
+          setCards(localData.cards);
+        } else {
+          const res = await fetch(`/api/decks/${deckId}`);
+          if (!res.ok) {
+            throw new Error("Failed to load study deck library");
+          }
+          const data = await res.json();
+          setDeck(data.deck);
+          setCards(data.cards);
         }
-        const data = await res.json();
-        setDeck(data.deck);
-        setCards(data.cards);
       } catch (err: any) {
         console.error(err);
         setErrorMsg(err.message || "Failed to load study deck.");

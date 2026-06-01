@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { DeckCard } from "@/components/dashboard/DeckCard";
 import { useUser } from "@/lib/auth-client";
 import type { Deck } from "@/types/deck";
+import { getDecks, deleteDeck } from "@/lib/indexeddb";
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -16,12 +17,24 @@ export default function DashboardPage() {
   // Fetch decks on mount
   useEffect(() => {
     async function fetchDecks() {
-      if (!user) return;
       try {
-        const res = await fetch("/api/decks");
-        if (!res.ok) throw new Error("Failed to fetch decks");
-        const data = await res.json();
-        setDecks(data as Deck[]);
+        if (!user) {
+          const localDecks: any = await getDecks("guest");
+          const formattedDecks = localDecks.map((d: any) => ({
+            id: d.id,
+            userId: d.userId,
+            title: d.title,
+            subject: d.subject,
+            created_at: d.createdAt,
+            card_count: d.cardCount
+          }));
+          setDecks(formattedDecks as Deck[]);
+        } else {
+          const res = await fetch("/api/decks");
+          if (!res.ok) throw new Error("Failed to fetch decks");
+          const data = await res.json();
+          setDecks(data as Deck[]);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -33,10 +46,13 @@ export default function DashboardPage() {
   }, [user]);
 
   const handleDeleteDeck = async (id: string) => {
-    if (!user) return;
     try {
-      const res = await fetch(`/api/decks/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete deck");
+      if (!user) {
+        await deleteDeck("guest", id);
+      } else {
+        const res = await fetch(`/api/decks/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed to delete deck");
+      }
       setDecks((prev) => prev.filter((d) => d.id !== id));
     } catch (err) {
       console.error(err);

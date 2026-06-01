@@ -11,6 +11,7 @@ import { UpgradeModal } from "@/components/convert/UpgradeModal";
 import { useUsage } from "@/hooks/useUsage";
 import { useUser } from "@/lib/auth-client";
 import type { SummaryResult } from "@/lib/summarize";
+import { createDeck } from "@/lib/indexeddb";
 
 type PageStatus =
   | "idle"
@@ -148,25 +149,25 @@ export default function ConvertPage() {
 
   // ── Save deck ───────────────────────────────────────────────────────────────
   const handleSaveDeck = async (title: string, cardsToSave: any[]) => {
-    if (!user) {
-      setErrorMsg("Must be signed in to save decks.");
-      return;
-    }
     setSaving(true);
     setErrorMsg("");
     try {
-      const res = await fetch("/api/decks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          subject: activeSubject,
-          sourceText: activeText,
-          cards: cardsToSave,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to save deck");
+      if (!user) {
+        await createDeck("guest", title, activeSubject, activeText, cardsToSave);
+      } else {
+        const res = await fetch("/api/decks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title,
+            subject: activeSubject,
+            sourceText: activeText,
+            cards: cardsToSave,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to save deck");
+      }
       
       mutateUsage();
       router.push("/dashboard");
