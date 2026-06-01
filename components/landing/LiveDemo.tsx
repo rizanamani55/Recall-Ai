@@ -40,6 +40,7 @@ export function LiveDemo() {
     state,
     submitAnswer,
     revealAnswer,
+    skipCard,
     updateUserInput,
     resetBlankStatus,
     resetGame,
@@ -90,6 +91,7 @@ export function LiveDemo() {
               updateUserInput={(blankIdx, val) => updateUserInput(state.currentCardIndex, blankIdx, val)}
               submitAnswer={submitAnswer}
               revealAnswer={revealAnswer}
+              skipCard={skipCard}
             />
           ) : (
             <div className="flex flex-col items-center justify-center gap-4 text-center py-4 animate-correct-pop font-mono">

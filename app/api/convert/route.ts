@@ -2,19 +2,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth-server";
 import { convertTextToClozeCards } from "@/lib/anthropic";
-import { checkAndIncrementUsage } from "@/lib/usage";
+import { checkAndIncrementUsage, decrementUsage } from "@/lib/usage";
 import { getOrCreateUser } from "@/lib/db";
 
-// ─── No limits — fully free & unlimited ──────────────────────────────────────
-const DAILY_LIMIT = Infinity;
+const FREE_DAILY_LIMIT = 3;
 
-// Rough upper bound: ~2 million chars ≈ ~1 400 pages of text
-const MAX_TEXT_LENGTH = 2_000_000;
+// Rough upper bound: 15,000 chars for standard
+const MAX_TEXT_LENGTH = 15_000;
 const MIN_TEXT_LENGTH = 50;
 
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await getAuthSession();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const { text, subject } = await req.json();
 
@@ -32,24 +34,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Usage tracking (always allowed — DAILY_LIMIT = Infinity)
-    await getOrCreateUser(userId, `${userId}@example.com`);
-    const { allowed, used } = await checkAndIncrementUsage(userId, DAILY_LIMIT);
+    // Check user plan
+    const user = await getOrCreateUser(userId, `${userId}@example.com`);
+    const limit = user.plan === "pro" ? Infinity : FREE_DAILY_LIMIT;
+
+    const { allowed, used } = await checkAndIncrementUsage(userId, limit);
     if (!allowed) {
       return NextResponse.json(
-        { error: "Daily limit reached.", used, limit: DAILY_LIMIT, upgrade: false },
+        { error: "Daily limit reached", used, limit, upgrade: true },
         { status: 429 }
       );
     }
 
-    // Generate cards — large texts are chunked automatically inside this function
-    const cards = await convertTextToClozeCards(text, subject || "general");
-
-    return NextResponse.json({ cards, used, limit: DAILY_LIMIT });
+    try {
+      // Generate cards
+      const cards = await convertTextToClozeCards(text, subject || "general");
+      return NextResponse.json({ cards, used, limit });
+    } catch (apiErr: any) {
+      await decrementUsage(userId);
+      throw apiErr; // caught by outer catch
+    }
   } catch (err: any) {
     console.error("Convert Route Error:", err);
     return NextResponse.json(
-      { error: err.message || "Failed to process text" },
+      { error: "Conversion failed. Please try again." },
       { status: 500 }
     );
   }

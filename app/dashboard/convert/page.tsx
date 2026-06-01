@@ -7,7 +7,9 @@ import { TextInputPanel, type ConvertMode } from "@/components/convert/TextInput
 import { ConversionLoader } from "@/components/convert/ConversionLoader";
 import { PreviewCard } from "@/components/convert/PreviewCard";
 import { SummaryView } from "@/components/convert/SummaryView";
+import { UpgradeModal } from "@/components/convert/UpgradeModal";
 import { useUsage } from "@/hooks/useUsage";
+import { useUser } from "@/lib/auth-client";
 import type { SummaryResult } from "@/lib/summarize";
 
 type PageStatus =
@@ -39,6 +41,7 @@ const LOADING_MESSAGES_CLOZE = [
 export default function ConvertPage() {
   const router = useRouter();
   const { mutateUsage } = useUsage();
+  const { user } = useUser();
 
   const [status, setStatus] = useState<PageStatus>("idle");
   const [generatedCards, setGeneratedCards] = useState<any[]>([]);
@@ -47,6 +50,7 @@ export default function ConvertPage() {
   const [activeText, setActiveText] = useState("");
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // ── Mode: Direct Cloze ──────────────────────────────────────────────────────
   const handleClozeConvert = async (text: string, subject: string) => {
@@ -63,7 +67,11 @@ export default function ConvertPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setErrorMsg(data.error || "Failed to process text. Please try again.");
+        if (data.upgrade) {
+          setShowUpgradeModal(true);
+        } else {
+          setErrorMsg(data.error || "Failed to process text. Please try again.");
+        }
         setStatus("idle");
         return;
       }
@@ -140,6 +148,10 @@ export default function ConvertPage() {
 
   // ── Save deck ───────────────────────────────────────────────────────────────
   const handleSaveDeck = async (title: string, cardsToSave: any[]) => {
+    if (!user) {
+      setErrorMsg("Must be signed in to save decks.");
+      return;
+    }
     setSaving(true);
     setErrorMsg("");
     try {
@@ -153,10 +165,9 @@ export default function ConvertPage() {
           cards: cardsToSave,
         }),
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to save deck");
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save deck");
+      
       mutateUsage();
       router.push("/dashboard");
     } catch (err: any) {
@@ -213,6 +224,10 @@ export default function ConvertPage() {
 
       {/* Workspace */}
       <div className="mt-2 w-full">
+        {showUpgradeModal && (
+          <UpgradeModal onDismiss={() => setShowUpgradeModal(false)} />
+        )}
+        
         {status === "idle" && (
           <TextInputPanel onConvert={handleConvert} disabled={false} />
         )}

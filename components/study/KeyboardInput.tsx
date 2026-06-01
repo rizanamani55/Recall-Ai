@@ -15,7 +15,10 @@ export function KeyboardInput({ showHelp, onToggleHelp }: KeyboardInputProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       let keyLabel = "";
-      if (e.key === "Enter") keyLabel = "enter";
+      if (e.key === "Enter") {
+        if (e.ctrlKey || e.metaKey) keyLabel = "ctrl-enter";
+        else keyLabel = "enter";
+      }
       else if (e.key === "Tab") keyLabel = "tab";
       else if (e.key === " ") keyLabel = "space";
       else if (e.key === "?") keyLabel = "question";
@@ -56,7 +59,7 @@ export function KeyboardInput({ showHelp, onToggleHelp }: KeyboardInputProps) {
           >
             ⇥ Tab
           </kbd>
-          <span>Skip Blank</span>
+          <span>Skip / Switch</span>
         </div>
 
         <div className="flex items-center gap-1.5">
@@ -105,12 +108,8 @@ export function KeyboardInput({ showHelp, onToggleHelp }: KeyboardInputProps) {
                 <kbd className="px-2 py-1 rounded bg-surface border border-border">Enter</kbd>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-border-card/30">
-                <span className="text-text-muted">Skip Blank (Breaks Streak)</span>
+                <span className="text-text-muted">Skip / Switch Card</span>
                 <kbd className="px-2 py-1 rounded bg-surface border border-border">Tab</kbd>
-              </div>
-              <div className="flex justify-between items-center py-1 border-b border-border-card/30">
-                <span className="text-text-muted">Advance to Next Card</span>
-                <kbd className="px-2 py-1 rounded bg-surface border border-border">Spacebar</kbd>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-border-card/30">
                 <span className="text-text-muted">Toggle Shortcuts Manual</span>
@@ -119,7 +118,7 @@ export function KeyboardInput({ showHelp, onToggleHelp }: KeyboardInputProps) {
             </div>
 
             <div className="text-xs text-text-muted font-sans italic mt-2 text-center bg-surface/50 p-2.5 rounded border border-border-card">
-              Type the answers exactly as they are blanked out. Correct entries automatically light up. Skip key reveals answers at the cost of your current streak.
+              Type the answers exactly as they are blanked out. Correct entries automatically light up. Reveal Answer key shows the correct answer at the cost of your current streak.
             </div>
 
             <button

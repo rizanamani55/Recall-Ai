@@ -130,6 +130,25 @@ export async function updateUserSubscription(
   }
 }
 
+export async function downgradeUserByStripeId(stripeSubscriptionId: string): Promise<void> {
+  if (isSupabaseConfiguredServer && supabaseServer) {
+    const { error } = await supabaseServer
+      .from("users")
+      .update({ plan: "free", stripe_subscription_id: null })
+      .eq("stripe_subscription_id", stripeSubscriptionId);
+      
+    if (error) console.error("Supabase user downgrade error:", error);
+  } else {
+    const db = readLocalDB();
+    const user = db.users.find((u: any) => u.stripe_subscription_id === stripeSubscriptionId);
+    if (user) {
+      user.plan = "free";
+      user.stripe_subscription_id = null;
+      writeLocalDB(db);
+    }
+  }
+}
+
 export async function createDeck(
   clerkId: string,
   title: string,

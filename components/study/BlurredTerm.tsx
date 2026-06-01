@@ -14,6 +14,7 @@ interface BlurredTermProps {
   isActive: boolean;
   onChange: (val: string) => void;
   onSubmit: () => void;
+  onReveal: () => void;
   onSkip: () => void;
 }
 
@@ -25,6 +26,7 @@ export function BlurredTerm({
   isActive,
   onChange,
   onSubmit,
+  onReveal,
   onSkip,
 }: BlurredTermProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -94,21 +96,40 @@ export function BlurredTerm({
 
       {/* Typing input overlay */}
       {isActive && (status === "typing" || status === "wrong") && (
-        <input
-          ref={inputRef}
-          type="text"
-          value={userInput}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="absolute inset-0 w-full h-full bg-transparent text-center text-text focus:outline-none caret-active font-bold select-text text-[inherit] leading-none p-0 border-0"
-          placeholder=""
-          aria-label="Fill in the blank"
-          autoCapitalize="off"
-          autoComplete="off"
-          autoCorrect="off"
-          spellCheck="false"
-          autoFocus
-        />
+        <div className="absolute inset-0 flex items-center pr-5">
+          <input
+            ref={inputRef}
+            type="text"
+            value={userInput}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="w-full h-full bg-transparent text-center text-text focus:outline-none caret-active font-bold select-text text-[inherit] leading-none p-0 border-0"
+            placeholder=""
+            aria-label="Fill in the blank"
+            autoCapitalize="off"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck="false"
+            autoFocus
+          />
+        </div>
+      )}
+
+      {/* Reveal Answer Icon */}
+      {isActive && (status === "typing" || status === "wrong") && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onChange(term);
+            if (inputRef.current) inputRef.current.focus();
+          }}
+          className="absolute right-1 top-1/2 -translate-y-1/2 text-text-muted hover:text-wrong p-0.5 rounded transition-colors"
+          title="Reveal Answer"
+          tabIndex={-1}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
       )}
 
       {/* Typewriter cursor blinking effect */}

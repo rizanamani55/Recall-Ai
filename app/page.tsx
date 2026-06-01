@@ -10,6 +10,7 @@ import { LiveDemo } from "@/components/landing/LiveDemo";
 import { FeatureGrid } from "@/components/landing/FeatureGrid";
 import { PricingCards } from "@/components/landing/PricingCards";
 import { Footer } from "@/components/landing/Footer";
+import { Logo } from "@/components/Logo";
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -48,10 +49,7 @@ export default function LandingPage() {
       {/* Sticky glassmorphism header navigation */}
       <header className="sticky top-0 z-50 w-full bg-[#060a14]/80 backdrop-blur-md border-b border-border-card/60">
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold select-none text-text hover:opacity-90">
-            <span className="text-xl">💾</span>
-            <span className="font-mono text-sm tracking-widest uppercase">RECALL.AI</span>
-          </Link>
+          <Logo className="hover:opacity-90" />
 
           {/* Desktop links */}
           <nav className="hidden md:flex items-center gap-8 text-xs font-mono text-text-muted">

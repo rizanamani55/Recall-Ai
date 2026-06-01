@@ -26,6 +26,18 @@ export function useTypewriter(
   useEffect(() => {
     if (!active || isComplete || !text) return;
 
+    // Check for reduced motion preference
+    const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    
+    if (prefersReducedMotion) {
+      setDisplayText(text);
+      setIsComplete(true);
+      if (onCompleteRef.current) {
+        onCompleteRef.current();
+      }
+      return;
+    }
+
     let currentIndex = 0;
     setDisplayText("");
 

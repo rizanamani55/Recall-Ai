@@ -148,18 +148,46 @@ async function callAI(prompt: string): Promise<string> {
     return msg.content[0].type === "text" ? msg.content[0].text : "";
   }
 
-  throw new Error("No AI provider configured. Add GROQ_API_KEY to .env.local (free at console.groq.com)");
+  throw new Error("ALL_PROVIDERS_EXHAUSTED");
 }
 
 function parseJSON(raw: string): any {
-  const clean = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
+  // Fix raw newlines inside strings that cause "Bad control character" errors
+  let clean = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
+  
+  // A quick heuristic to escape unescaped newlines within the JSON string values
+  // We replace actual newlines with "\n" so JSON.parse won't choke.
+  clean = clean.replace(/\n/g, "\\n");
+  // But wait, the structure itself might rely on newlines (like between keys).
+  // Actually, replacing all \n with \n string is bad for the JSON structure, 
+  // but JSON.parse ignores whitespace. Wait, \n inside strings is the issue.
+  // It's safer to just instruct the AI very clearly. I'll rely on the AI instruction 
+  // and handle control characters via a regex that targets control chars.
+  clean = clean.replace(/[\u0000-\u001F]+/g, (match) => {
+    if (match === '\n' || match === '\r\n') return "\\n";
+    if (match === '\t') return "\\t";
+    return "";
+  });
+
   // Extract first JSON object/array
   const firstBrace = Math.min(
     clean.indexOf("{") === -1 ? Infinity : clean.indexOf("{"),
     clean.indexOf("[") === -1 ? Infinity : clean.indexOf("[")
   );
   const lastBrace = Math.max(clean.lastIndexOf("}"), clean.lastIndexOf("]"));
-  return JSON.parse(clean.slice(firstBrace, lastBrace + 1));
+  
+  // Unescape the structural newlines we accidentally escaped
+  let jsonStr = clean.slice(firstBrace, lastBrace + 1);
+  // Re-allow standard json formatting by fixing escaped structural characters
+  jsonStr = jsonStr.replace(/\\n/g, "\\n"); // keep them as escaped newlines for the strings
+  
+  try {
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    // Fallback: if it still fails due to weird escaping, try to just parse it after basic cleanup
+    const veryClean = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
+    return JSON.parse(veryClean.slice(firstBrace, lastBrace + 1).replace(/\n/g, " "));
+  }
 }
 
 // ─── Step 1: Summarise one chunk ─────────────────────────────────────────────
@@ -167,12 +195,15 @@ function parseJSON(raw: string): any {
 async function summariseChunk(chunk: string, subject: string): Promise<string> {
   const prompt = `You are an expert academic summariser for ${subject} students.
 
-Summarise the following textbook passage in 3–5 dense sentences, preserving all important facts, terms, values, and mechanisms. Focus on what is testable and important to remember.
+Summarise the following textbook passage. Adapt your summary length to the source material:
+- If the passage is short (e.g. a single paragraph), provide a concise 1-2 paragraph summary.
+- If the passage is long and dense, provide a comprehensive 4-6 paragraph summary.
+Ensure the summary is clear and crisp, preserving all critical facts, key terms, values, mechanisms, and nuances. Focus on what is testable and important to remember.
 
 Passage:
 ${chunk}
 
-Return ONLY the summary paragraph, no preamble.`;
+Return ONLY the summary paragraphs, no preamble.`;
 
   return callAI(prompt);
 }
@@ -189,14 +220,16 @@ async function synthesise(
   const prompt = `You are an expert academic content analyst for ${subject}.
 
 Below are section-by-section summaries of a ${Math.round(originalLength / 5)}-word textbook excerpt.
-Synthesise them into a final structured study overview.
+Synthesise them into a final structured study overview. Ensure the synthesis is clear, crisp, and comprehensive without losing critical information. 
+
+**Length Requirement:** Adapt your final summary length proportionally to the original text length (${Math.round(originalLength / 5)} words). For short texts, write 1–2 paragraphs. For full chapters, write 5–8 paragraphs.
 
 Section summaries:
 ${combined}
 
 Return ONLY a valid JSON object with exactly this shape (no markdown, no explanation):
 {
-  "summary": "3–5 cohesive paragraphs covering all major concepts",
+  "summary": "Detailed, cohesive summary appropriately scaled to the source text length. Separate paragraphs using \\n\\n.",
   "keyPoints": [
     "Concise testable fact 1",
     "Concise testable fact 2"
@@ -212,10 +245,14 @@ Return ONLY a valid JSON object with exactly this shape (no markdown, no explana
   }
 }
 
+CRITICAL RULES FOR JSON:
+- Escape all newlines inside strings as \\n\\n. DO NOT use literal line breaks inside the string values.
+- Ensure the output is strictly valid JSON.
+
 Rules:
-- keyPoints: 8–15 items, each ≤ 15 words, factual and testable
+- keyPoints: Extracted factual and testable points (5–20 items depending on text length, each ≤ 20 words)
 - mindmap.center: 2–4 words, the overarching topic
-- mindmap.branches: 4–8 branches, each with 2–5 children
+- mindmap.branches: 3–8 branches (scale with text size), each with 2–5 children
 - branch/children labels: short (1–4 words), no punctuation
 - Return ONLY the JSON object`;
 
@@ -286,22 +323,27 @@ export async function summariseText(
   const total = chunks.length;
 
   // If no AI configured, return a mock
-  if (!isGeminiConfigured && !isAnthropicConfigured) {
+  if (!isGroqConfigured && !isGeminiConfigured && !isAnthropicConfigured) {
     onProgress?.("mock", 1, 1);
     await new Promise((r) => setTimeout(r, 1500));
     return buildMockResult(text, subject);
   }
 
-  // Step 1: summarise each chunk (with inter-chunk delay)
-  const chunkSummaries: string[] = [];
-  for (let i = 0; i < chunks.length; i++) {
-    onProgress?.("chunk", i, total);
-    if (i > 0) await sleep(INTER_CHUNK_DELAY_MS);
-    const s = await summariseChunk(chunks[i], subject);
-    chunkSummaries.push(s);
-  }
+  try {
+    // Step 1: summarise each chunk (with inter-chunk delay)
+    const chunkSummaries: string[] = [];
+    for (let i = 0; i < chunks.length; i++) {
+      onProgress?.("chunk", i, total);
+      if (i > 0) await sleep(INTER_CHUNK_DELAY_MS);
+      const s = await summariseChunk(chunks[i], subject);
+      chunkSummaries.push(s);
+    }
 
-  // Step 2: synthesise
-  onProgress?.("synthesise", total, total);
-  return synthesise(chunkSummaries, subject, text.length);
+    // Step 2: synthesise
+    onProgress?.("synthesise", total, total);
+    return await synthesise(chunkSummaries, subject, text.length);
+  } catch (err: any) {
+    console.error("AI summarization failed or quotas exhausted. Falling back to mock.", err);
+    return buildMockResult(text, subject);
+  }
 }

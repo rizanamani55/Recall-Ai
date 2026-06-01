@@ -1,7 +1,8 @@
 // components/convert/MindMapCanvas.tsx
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
+import { Download, ZoomIn, ZoomOut, Maximize } from "lucide-react";
 import type { MindMapData } from "@/lib/summarize";
 
 interface MindMapCanvasProps {
@@ -33,47 +34,130 @@ function wrapText(text: string, maxChars = 14): string[] {
 
 export function MindMapCanvas({ data }: MindMapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dims, setDims] = useState({ w: 800, h: 600 });
+  const svgRef = useRef<SVGSVGElement>(null);
   const [hoveredBranch, setHoveredBranch] = useState<number | null>(null);
 
-  useEffect(() => {
-    const obs = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) {
-        const w = entry.contentRect.width;
-        setDims({ w, h: Math.min(Math.max(w * 0.65, 420), 700) });
-      }
-    });
-    if (containerRef.current) obs.observe(containerRef.current);
-    return () => obs.disconnect();
-  }, []);
+  // Zoom & Pan state
+  const [scale, setScale] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  const { w, h } = dims;
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+  };
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+  };
+  const handleMouseUp = () => setIsDragging(false);
+
+  const handleZoomIn = () => setScale(s => Math.min(s + 0.3, 3.5));
+  const handleZoomOut = () => setScale(s => Math.max(s - 0.3, 0.4));
+  const handleReset = () => { setScale(1); setPan({ x: 0, y: 0 }); };
+
+  // Fixed internal coordinate system guarantees no cropping
+  const w = 1000;
+  const h = 1000;
   const cx = w / 2;
   const cy = h / 2;
+
+  const downloadAsImage = () => {
+    if (!svgRef.current) return;
+    
+    const serializer = new XMLSerializer();
+    let source = serializer.serializeToString(svgRef.current);
+    if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+      source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+    
+    const img = new Image();
+    const svgBlob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(svgBlob);
+    
+    img.onload = () => {
+      // High-res 2000x2000 PNG export
+      const canvas = document.createElement("canvas");
+      canvas.width = 2000;
+      canvas.height = 2000;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.scale(2, 2);
+        ctx.fillStyle = "#0b101f"; 
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        
+        const a = document.createElement("a");
+        a.download = `${data.center.replace(/[^a-zA-Z0-9]/g, "_")}_mindmap.png`;
+        a.href = canvas.toDataURL("image/png");
+        a.click();
+      }
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  };
 
   const branches = data.branches;
   const numBranches = branches.length;
 
-  // Responsive radii
-  const branchR = Math.min(w, h) * 0.30;
-  const leafR   = Math.min(w, h) * 0.47;
-  const centerR = Math.min(w, h) * 0.09;
+  // Calibrated radii so max extension (390 + 35 + 36 = 461) fits easily within 500 radius (leaves 39px padding)
+  const branchR = 210;
+  const leafR   = 390;
+  const centerR = 60;
 
-  // Build geometry
   const branchAngle = 360 / numBranches;
 
   return (
-    <div ref={containerRef} className="w-full">
-      <svg
-        width={w}
-        height={h}
-        viewBox={`0 0 ${w} ${h}`}
-        className="select-none"
-        style={{ fontFamily: "'JetBrains Mono', monospace" }}
+    <div 
+      ref={containerRef} 
+      className={`w-full relative group overflow-hidden rounded-xl border border-border-card/30 bg-[#0b101f] ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    >
+      {/* Controls Overlay */}
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex bg-blue-500/10 border border-blue-500/30 rounded-lg p-1">
+          <button onClick={handleZoomOut} className="p-1.5 hover:bg-blue-500/20 text-blue-300 rounded" title="Zoom Out">
+            <ZoomOut className="w-4 h-4" />
+          </button>
+          <button onClick={handleReset} className="p-1.5 hover:bg-blue-500/20 text-blue-300 rounded" title="Reset View">
+            <Maximize className="w-4 h-4" />
+          </button>
+          <button onClick={handleZoomIn} className="p-1.5 hover:bg-blue-500/20 text-blue-300 rounded" title="Zoom In">
+            <ZoomIn className="w-4 h-4" />
+          </button>
+        </div>
+
+        <button
+          onClick={downloadAsImage}
+          className="p-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 flex items-center gap-2 text-sm font-medium"
+          title="Download PNG"
+        >
+          <Download className="w-4 h-4" />
+          Export
+        </button>
+      </div>
+
+      {/* Transform Layer */}
+      <div 
+        style={{
+          transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
+          transition: isDragging ? "none" : "transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)",
+          transformOrigin: "center"
+        }}
+        className="w-full h-full flex items-center justify-center"
       >
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${w} ${h}`}
+          className="w-full h-auto select-none pointer-events-none"
+          style={{ fontFamily: "'JetBrains Mono', monospace", maxHeight: "75vh" }}
+        >
         <defs>
-          {/* Glow filter */}
           <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
             <feGaussianBlur stdDeviation="4" result="coloredBlur" />
             <feMerge>
@@ -179,10 +263,18 @@ export function MindMapCanvas({ data }: MindMapCanvasProps) {
 
               {/* Leaf nodes */}
               {branch.children.map((child, ci) => {
-                // Spread leaves in a fan around the branch direction
-                const fanSpread = Math.min(50, 120 / numLeaves);
-                const leafAngle = angle + fanSpread * (ci - (numLeaves - 1) / 2);
-                const leafPt = polar(cx, cy, leafR, leafAngle);
+                // Prevent overlap by restricting fan spread to less than the branch angle
+                const maxFanSpread = branchAngle * 0.85; 
+                const actualFanSpread = Math.min(maxFanSpread, numLeaves > 1 ? 120 : 0);
+                const step = numLeaves > 1 ? actualFanSpread / (numLeaves - 1) : 0;
+                
+                const leafAngle = angle + (ci - (numLeaves - 1) / 2) * step;
+                
+                // Stagger distance significantly (35px) to prevent text boxes bumping radially
+                const isStaggered = ci % 2 !== 0;
+                const currentLeafR = leafR + (isStaggered ? 35 : 0);
+                
+                const leafPt = polar(cx, cy, currentLeafR, leafAngle);
                 const leafLines = wrapText(child, 11);
 
                 return (
@@ -268,6 +360,7 @@ export function MindMapCanvas({ data }: MindMapCanvasProps) {
           </text>
         ))}
       </svg>
+      </div>
     </div>
   );
 }

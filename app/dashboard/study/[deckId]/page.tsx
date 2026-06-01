@@ -12,6 +12,7 @@ import { KeyboardInput } from "@/components/study/KeyboardInput";
 import { FeedbackOverlay } from "@/components/study/FeedbackOverlay";
 import { HintSystem } from "@/components/study/HintSystem";
 import { SessionSummary } from "@/components/study/SessionSummary";
+import { useUser } from "@/lib/auth-client";
 
 interface StudyPageProps {
   params: Promise<{
@@ -23,6 +24,7 @@ export default function StudyDeckPage({ params }: StudyPageProps) {
   const resolvedParams = React.use(params);
   const deckId = resolvedParams.deckId;
   const { usage } = useUsage();
+  const { user } = useUser();
   
   const [deck, setDeck] = useState<any>(null);
   const [cards, setCards] = useState<any[]>([]);
@@ -36,6 +38,7 @@ export default function StudyDeckPage({ params }: StudyPageProps) {
   // Fetch saved deck cards
   useEffect(() => {
     async function loadDeckData() {
+      if (!user) return;
       try {
         const res = await fetch(`/api/decks/${deckId}`);
         if (!res.ok) {
@@ -53,13 +56,14 @@ export default function StudyDeckPage({ params }: StudyPageProps) {
     }
 
     loadDeckData();
-  }, [deckId]);
+  }, [deckId, user]);
 
   // Hook game state engine
   const {
     state,
     submitAnswer,
     revealAnswer,
+    skipCard,
     updateUserInput,
     resetBlankStatus,
     resetGame,
@@ -79,13 +83,18 @@ export default function StudyDeckPage({ params }: StudyPageProps) {
   useKeyboardCapture(
     {
       onSubmit: () => {
-        if (activeBlankState && typewriterComplete && !state.isComplete) {
+        if (activeBlankState && !state.isComplete) {
           submitAnswer(activeBlankState.userInput);
         }
       },
-      onSkip: () => {
-        if (activeBlankState && typewriterComplete && !state.isComplete) {
+      onReveal: () => {
+        if (activeBlankState && !state.isComplete) {
           revealAnswer();
+        }
+      },
+      onSkip: () => {
+        if (activeBlankState && !state.isComplete) {
+          skipCard();
         }
       },
       onToggleHelp: () => {
@@ -196,6 +205,7 @@ export default function StudyDeckPage({ params }: StudyPageProps) {
               updateUserInput={(blankIdx, val) => updateUserInput(state.currentCardIndex, blankIdx, val)}
               submitAnswer={submitAnswer}
               revealAnswer={revealAnswer}
+              skipCard={skipCard}
             />
           </div>
 
@@ -206,6 +216,7 @@ export default function StudyDeckPage({ params }: StudyPageProps) {
               term={activeBlankState.term}
               userPlan={userPlan}
               onUpgradeClick={handleUpgradeRedirect}
+              onReveal={() => updateUserInput(state.currentCardIndex, state.currentBlankIndex, activeBlankState.term)}
             />
           )}
 

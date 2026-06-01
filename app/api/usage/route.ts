@@ -6,6 +6,7 @@ import { getOrCreateUser, getDailyUsage } from "@/lib/db";
 export async function GET(req: NextRequest) {
   try {
     const { userId } = await getAuthSession();
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const user = await getOrCreateUser(userId, `${userId}@example.com`);
     const used = await getDailyUsage(userId);

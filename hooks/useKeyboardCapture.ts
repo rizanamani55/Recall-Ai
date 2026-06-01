@@ -3,6 +3,7 @@ import { useEffect } from "react";
 
 interface KeyboardBindings {
   onSubmit?: () => void;
+  onReveal?: () => void;
   onSkip?: () => void;
   onNext?: () => void;
   onToggleHelp?: () => void;
@@ -21,7 +22,6 @@ export function useKeyboardCapture(
       const isInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA";
 
       if (e.key === "Enter") {
-        // Submit answer
         if (bindings.onSubmit) {
           e.preventDefault();
           bindings.onSubmit();

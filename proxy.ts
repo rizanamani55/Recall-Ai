@@ -15,6 +15,7 @@ export default async function middleware(req: NextRequest) {
         "/sign-in(.*)",
         "/sign-up(.*)",
         "/api/stripe/webhook(.*)",
+        "/api/clerk/webhook(.*)",
         "/api/convert(.*)",
         "/api/decks(.*)",
         "/api/usage(.*)",

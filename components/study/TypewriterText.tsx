@@ -16,6 +16,7 @@ interface TypewriterTextProps {
   updateUserInput: (blankIdx: number, value: string) => void;
   submitAnswer: (input: string) => void;
   revealAnswer: () => void;
+  skipCard: () => void;
 }
 
 export function TypewriterText({
@@ -27,6 +28,7 @@ export function TypewriterText({
   updateUserInput,
   submitAnswer,
   revealAnswer,
+  skipCard,
 }: TypewriterTextProps) {
   const [typewriterActive, setTypewriterActive] = useState(false);
 
@@ -98,10 +100,10 @@ export function TypewriterText({
           
           if (!blankState) return null;
 
-          const isCurrentActive = isActiveCard && isComplete && blankIdx === currentBlankIndex;
+          const isCurrentActive = isActiveCard && blankIdx === currentBlankIndex;
 
-          // Determine blank status: if typewriter is running, it remains idle
-          const status: CardStatus = !isComplete ? "idle" : blankState.status;
+          // Determine blank status: directly use the engine state
+          const status: CardStatus = blankState.status;
 
           return (
             <BlurredTerm
@@ -113,7 +115,8 @@ export function TypewriterText({
               isActive={isCurrentActive}
               onChange={(val) => updateUserInput(blankIdx, val)}
               onSubmit={() => submitAnswer(blankState.userInput)}
-              onSkip={revealAnswer}
+              onReveal={revealAnswer}
+              onSkip={skipCard}
             />
           );
         }

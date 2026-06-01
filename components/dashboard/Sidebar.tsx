@@ -5,6 +5,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/Logo";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -18,10 +19,7 @@ export function Sidebar() {
     <aside className="w-64 bg-[#070b14] border-r border-border-card/65 flex flex-col justify-between font-mono text-xs select-none">
       <div className="flex flex-col gap-8 p-6">
         {/* Sidebar Header Logo */}
-        <Link href="/" className="flex items-center gap-2 font-bold text-text hover:opacity-90">
-          <span className="text-lg">💾</span>
-          <span className="tracking-widest uppercase">RECALL.AI</span>
-        </Link>
+        <Logo className="hover:opacity-90" />
 
         {/* Sidebar Nav Items */}
         <nav className="flex flex-col gap-2 mt-4">

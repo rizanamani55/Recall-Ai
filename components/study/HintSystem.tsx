@@ -9,9 +9,10 @@ interface HintSystemProps {
   term: string;
   userPlan: string;
   onUpgradeClick: () => void;
+  onReveal: () => void;
 }
 
-export function HintSystem({ hintText, term, userPlan, onUpgradeClick }: HintSystemProps) {
+export function HintSystem({ hintText, term, userPlan, onUpgradeClick, onReveal }: HintSystemProps) {
   const [showHint, setShowHint] = useState(false);
   const [firstLetterRevealed, setFirstLetterRevealed] = useState(false);
 
@@ -64,6 +65,14 @@ export function HintSystem({ hintText, term, userPlan, onUpgradeClick }: HintSys
           ) : (
             <span className="text-xs text-accent/80 font-bold">First Letter Active</span>
           )}
+
+          {/* Reveal Answer */}
+          <button
+            onClick={onReveal}
+            className="px-2.5 py-1 text-xs rounded border border-wrong/40 bg-wrong/5 hover:bg-wrong/20 text-wrong hover:text-text transition-colors duration-200 ml-2"
+          >
+            👁️ Reveal Answer
+          </button>
         </div>
       </div>
 

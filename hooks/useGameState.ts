@@ -75,21 +75,6 @@ export function useGameState(cards: ClozeCard[]) {
       
       const isCorrect = input.trim().toLowerCase() === blank.term.trim().toLowerCase();
 
-      const newBlanks = blanks.map((cBlanks, ci) =>
-        cBlanks.map((b, bi) =>
-          ci === currentCardIndex && bi === currentBlankIndex
-            ? {
-                ...b,
-                userInput: input,
-                status: isCorrect ? ("correct" as const) : ("wrong" as const),
-                attempts: b.attempts + 1,
-              }
-            : ci === nextCardIndex && bi === nextBlankIndex && !isComplete
-            ? { ...b, status: "typing" as const }
-            : b
-        )
-      );
-
       // Transition helpers
       const totalBlanksOnCard = stateCards[currentCardIndex].blanks.length;
       
@@ -113,6 +98,21 @@ export function useGameState(cards: ClozeCard[]) {
           nextBlankIndex = currentBlankIndex + 1;
         }
       }
+
+      const newBlanks = blanks.map((cBlanks, ci) =>
+        cBlanks.map((b, bi) =>
+          ci === currentCardIndex && bi === currentBlankIndex
+            ? {
+                ...b,
+                userInput: input,
+                status: isCorrect ? ("correct" as const) : ("wrong" as const),
+                attempts: b.attempts + 1,
+              }
+            : ci === nextCardIndex && bi === nextBlankIndex && !isComplete
+            ? { ...b, status: "typing" as const }
+            : b
+        )
+      );
 
       // Calculate score using dynamic multiplier: score + base(10) * multiplier(1 + streak * 0.1)
       const basePoints = 10;
@@ -138,16 +138,6 @@ export function useGameState(cards: ClozeCard[]) {
       const cardBlanks = blanks[currentCardIndex];
       const blank = cardBlanks[currentBlankIndex];
 
-      const newBlanks = blanks.map((cBlanks, ci) =>
-        cBlanks.map((b, bi) =>
-          ci === currentCardIndex && bi === currentBlankIndex
-            ? { ...b, status: "revealed" as const, userInput: b.term }
-            : ci === nextCardIndex && bi === nextBlankIndex && !isComplete
-            ? { ...b, status: "typing" as const }
-            : b
-        )
-      );
-
       const totalBlanksOnCard = stateCards[currentCardIndex].blanks.length;
       const isLastBlankOnCard = currentBlankIndex + 1 >= totalBlanksOnCard;
 
@@ -167,6 +157,16 @@ export function useGameState(cards: ClozeCard[]) {
         nextBlankIndex = currentBlankIndex + 1;
       }
 
+      const newBlanks = blanks.map((cBlanks, ci) =>
+        cBlanks.map((b, bi) =>
+          ci === currentCardIndex && bi === currentBlankIndex
+            ? { ...b, status: "revealed" as const, userInput: b.term }
+            : ci === nextCardIndex && bi === nextBlankIndex && !isComplete
+            ? { ...b, status: "typing" as const }
+            : b
+        )
+      );
+
       return {
         ...prev,
         blanks: newBlanks,
@@ -174,6 +174,22 @@ export function useGameState(cards: ClozeCard[]) {
         currentCardIndex: nextCardIndex,
         streak: 0, // skip kills streak
         isComplete,
+      };
+    });
+  }, []);
+
+  const skipCard = useCallback(() => {
+    setState((prev) => {
+      const { currentCardIndex, cards: stateCards } = prev;
+      if (stateCards.length === 0 || prev.isComplete) return prev;
+
+      const isLastCard = currentCardIndex + 1 >= stateCards.length;
+      return {
+        ...prev,
+        currentCardIndex: isLastCard ? currentCardIndex : currentCardIndex + 1,
+        currentBlankIndex: 0,
+        streak: 0,
+        isComplete: isLastCard,
       };
     });
   }, []);
@@ -201,6 +217,7 @@ export function useGameState(cards: ClozeCard[]) {
     state,
     submitAnswer,
     revealAnswer,
+    skipCard,
     updateUserInput,
     resetBlankStatus,
     resetGame,

@@ -4,6 +4,7 @@
 import React from "react";
 import Link from "next/link";
 import { SignIn } from "@clerk/nextjs";
+import { Logo } from "@/components/Logo";
 import { isClerkConfiguredClient, mockLogin } from "@/lib/auth-client";
 
 export default function SignInPage() {
@@ -15,10 +16,7 @@ export default function SignInPage() {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#111827_1px,transparent_1px),linear-gradient(to_bottom,#111827_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-25 pointer-events-none" />
 
       <div className="relative z-10 w-full flex flex-col items-center gap-6">
-        <Link href="/" className="flex items-center gap-2 font-bold font-mono text-sm tracking-widest text-text">
-          <span>💾</span>
-          <span>RECALL.AI</span>
-        </Link>
+        <Logo />
 
         {isClerk ? (
           <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" />

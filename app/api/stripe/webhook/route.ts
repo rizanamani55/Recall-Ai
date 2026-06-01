@@ -1,7 +1,7 @@
 // app/api/stripe/webhook/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { isStripeConfigured, stripe } from "@/lib/stripe";
-import { updateUserSubscription } from "@/lib/db";
+import { updateUserSubscription, downgradeUserByStripeId } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
@@ -53,15 +53,12 @@ export async function POST(req: NextRequest) {
       }
     } else if (eventType === "customer.subscription.deleted") {
       stripeSubscriptionId = session.id;
-      // We search users or match by clerkUserId
-      // For simplicity, find user associated with this sub and degrade to free
-      // We can query Supabase or local storage directly, let's update users
-      // For our DAL, we update subscription by clerkId, so we check customer/sub
-      // Since our simple DAL updates by clerkId, let's update this subscription
-      // We can extend db.ts or search clerkId. Since webhook handles deletions:
       if (session.metadata?.clerkUserId) {
         await updateUserSubscription(session.metadata.clerkUserId, "free", null, null);
+      } else if (stripeSubscriptionId) {
+        await downgradeUserByStripeId(stripeSubscriptionId);
       }
+      console.log(`[Stripe Webhook] Downgraded Subscription: ${stripeSubscriptionId} to free plan.`);
     }
 
     return NextResponse.json({ received: true });

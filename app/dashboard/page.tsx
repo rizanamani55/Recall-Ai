@@ -5,21 +5,23 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { DeckCard } from "@/components/dashboard/DeckCard";
+import { useUser } from "@/lib/auth-client";
 import type { Deck } from "@/types/deck";
 
 export default function DashboardPage() {
+  const { user } = useUser();
   const [decks, setDecks] = useState<Deck[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Fetch decks on mount
   useEffect(() => {
     async function fetchDecks() {
+      if (!user) return;
       try {
         const res = await fetch("/api/decks");
-        if (res.ok) {
-          const data = await res.json();
-          setDecks(data);
-        }
+        if (!res.ok) throw new Error("Failed to fetch decks");
+        const data = await res.json();
+        setDecks(data as Deck[]);
       } catch (err) {
         console.error(err);
       } finally {
@@ -28,10 +30,17 @@ export default function DashboardPage() {
     }
 
     fetchDecks();
-  }, []);
+  }, [user]);
 
-  const handleDeleteDeck = (id: string) => {
-    setDecks((prev) => prev.filter((d) => d.id !== id));
+  const handleDeleteDeck = async (id: string) => {
+    if (!user) return;
+    try {
+      const res = await fetch(`/api/decks/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete deck");
+      setDecks((prev) => prev.filter((d) => d.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
