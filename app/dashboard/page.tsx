@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { DeckCard } from "@/components/dashboard/DeckCard";
 import { useUser } from "@/lib/auth-client";
 import type { Deck } from "@/types/deck";
-import { getDecks, deleteDeck } from "@/lib/indexeddb";
+import { getDecks, getDeck, deleteDeck } from "@/lib/indexeddb";
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -30,6 +30,29 @@ export default function DashboardPage() {
           }));
           setDecks(formattedDecks as Deck[]);
         } else {
+          // Sync any local decks to the cloud
+          const localDecks: any = await getDecks("guest");
+          if (localDecks && localDecks.length > 0) {
+            for (const localDeck of localDecks) {
+              const fullDeckInfo: any = await getDeck("guest", localDeck.id);
+              if (fullDeckInfo) {
+                const res = await fetch("/api/decks", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    title: localDeck.title,
+                    subject: localDeck.subject,
+                    sourceText: localDeck.sourceText,
+                    cards: fullDeckInfo.cards || [],
+                  }),
+                });
+                if (res.ok) {
+                  await deleteDeck("guest", localDeck.id);
+                }
+              }
+            }
+          }
+
           const res = await fetch("/api/decks");
           if (!res.ok) throw new Error("Failed to fetch decks");
           const data = await res.json();
